@@ -1,4 +1,4 @@
-# footagesorting
+# footagesort
 ##Use openai to edit highlights of long videos and interviews
 ###a Subtitle Soundbite Extractor
 
