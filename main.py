@@ -1,5 +1,5 @@
 import openai
-openai.api_key = "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"
+openai.api_key = "YOUR-API-KEY"
 import srt
 import sqlite3
 import json
