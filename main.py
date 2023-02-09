@@ -91,9 +91,8 @@ def create_srt_transcript(input_file: str, output_file: str, device: str = "cuda
     None
     """
     input_audio = "wavfile.wav"
-    with open(input_audio, 'w') as f:
-        f.write("")
-    f.close()
+    with open(input_audio, 'w+') as f:
+        f.close()
     print("creating audio file...")
     # input_audio = input_file[:-4] + ".wav"
     # Convert the input file
@@ -133,8 +132,7 @@ def create_srt_transcript(input_file: str, output_file: str, device: str = "cuda
 #       end = segment.end.total_seconds()
         start_time = srt.timedelta(seconds=int(segment['start']))
         end_time = srt.timedelta(seconds=int(segment['end']))
-        print(end_time)
-#       start_time = srt.timedelta(seconds=int(start['start'].total_seconds()))
+        start_time = srt.timedelta(seconds=int(start['start'].total_seconds()))
 #       end_time = srt.timedelta(seconds=int(end['end'].total_seconds()))
         #start_time = srt.timestamp(segment['start'])
         #end_time = srt.timestamp(segment['end'])
@@ -527,7 +525,7 @@ def format_time(seconds):
 # adds a delay to a Completion API call if rate limited
 def delayed_completion(delay_in_seconds: float = 1):
     """Delay a completion by a specified amount of time."""
-    print(".....")
+    #print(".....")
     time.sleep(delay_in_seconds)
 
 #def apply_edits(input_mp3, edl_file, editedoutput):
@@ -611,60 +609,54 @@ def render(user_provided_file, estruct, editedoutput, videoBitrate="2000k", audi
     v = VideoFileClip(user_provided_file)
     duration = v.duration
     clips = v.subclip(0,0) #blank 0-time clip
-
     for edit in estruct.edits:
-        nextTime = float(edit.time1)
-        time2 = float(edit.time2)
-        action = edit.action
-
-        if nextTime > duration:
-            nextTime = duration
-
-        if prevTime > duration:
-            prevTime = duration
-
-        clip = v.subclip(prevTime,nextTime)
-        clips = concatenate([clips,clip])
-        print("created subclip from " + str(prevTime) + " to " + str(nextTime))
-
-        prevTime = nextTime
-        nextTime = time2
-
-        if action == "1":
-            # Muting audio only. Create a segment with no audio and add it to the rest.
-            clip = VideoFileClip(user_provided_file, audio = False).subclip(prevTime,nextTime)
-            clips = concatenate([clips,clip])
-            print("created muted subclip from " + str(prevTime) + " to " + str(nextTime))
-
-            # Advance to next segment time.
-            prevTime = nextTime
-
-        elif action == "0":
-            #Do nothing (video and audio cut)
-            print("Cut video from "+str(prevTime)+" to "+str(nextTime)+".")
-            prevTime = nextTime
-
-        elif action == "2":
-            # Cut audio and speed up video to cover it.
-            #v = VideoFileClip(videofile)
-
-            # Create two clips. One for the cut segment, one immediately after of equal length for use in the speedup.
-            s1 = v.subclip(prevTime,nextTime).without_audio()
-            s2 = v.subclip(nextTime,(nextTime + s1.duration))
-
-            # Put the clips together, speed them up, and use the audio from the second segment.
-            clip = concatenate([s1,s2.without_audio()]).speedx(final_duration=s1.duration).set_audio(s2.audio)
-            clips = concatenate([clips,clip])
-            print("Cutting audio from "+str(prevTime)+" to "+str(nextTime)+" and squeezing video from "+str(prevTime)+" to "+str(nextTime + s1.duration)+" into that slot.")
-            # Advance to next segment time (+time from speedup)
-            prevTime = nextTime + s1.duration
-
+        if (edit.startswith("TITLE:") or edit.startswith("FCM:") or edit.startswith("* FROM CLIP NAME")): #or not edit.strip():
+            continue
         else:
-            # No edit action. Just put the clips together and continue.
+            nextTime = float(edit.time1)
+            time2 = float(edit.time2)
+            action = edit.action
+
+            if nextTime > duration:
+                nextTime = duration
+
+            if prevTime > duration:
+                prevTime = duration
+
             clip = v.subclip(prevTime,nextTime)
             clips = concatenate([clips,clip])
-            # Advance to next segment time.
+            print("created subclip from " + str(prevTime) + " to " + str(nextTime))
             prevTime = nextTime
+            nextTime = time2
+            if action == "1":
+                # Muting audio only. Create a segment with no audio and add it to the rest.
+                clip = VideoFileClip(user_provided_file, audio = False).subclip(prevTime,nextTime)
+                clips = concatenate([clips,clip])
+                print("created muted subclip from " + str(prevTime) + " to " + str(nextTime))
+                # Advance to next segment time.
+                prevTime = nextTime
+            elif action == "0":
+                #Do nothing (video and audio cut)
+                print("Cut video from "+str(prevTime)+" to "+str(nextTime)+".")
+                prevTime = nextTime
+            elif action == "2":
+                # Cut audio and speed up video to cover it.
+                #v = VideoFileClip(videofile)
+                # Create two clips. One for the cut segment, one immediately after of equal length for use in the speedup.
+                s1 = v.subclip(prevTime,nextTime).without_audio()
+                s2 = v.subclip(nextTime,(nextTime + s1.duration))
+                # Put the clips together, speed them up, and use the audio from the second segment.
+                clip = concatenate([s1,s2.without_audio()]).speedx(final_duration=s1.duration).set_audio(s2.audio)
+                clips = concatenate([clips,clip])
+                print("Cutting audio from "+str(prevTime)+" to "+str(nextTime)+" and squeezing video from "+str(prevTime)+" to "+str(nextTime + s1.duration)+" into that slot.")
+                # Advance to next segment time (+time from speedup)
+                prevTime = nextTime + s1.duration
+            else:
+                # No edit action. Just put the clips together and continue.
+                clip = v.subclip(prevTime,nextTime)
+                clips = concatenate([clips,clip])
+                # Advance to next segment time.
+                prevTime = nextTime
 
 
     videoLength = duration
@@ -681,7 +673,7 @@ def render(user_provided_file, estruct, editedoutput, videoBitrate="2000k", audi
     clip = v.subclip(prevTime,videoLength)
     print("created ending clip from " + str(prevTime) + " to " + str(videoLength))
     clips = concatenate([clips,clip])
-    clips.write_videofile(editedoutput, codec=vcodec, fps=24, bitrate=videoBitrate, audio_bitrate=audioBitrate, audio_codec=acodec, ffmpeg_params=fparams, threads=threadNum, preset=ffmpegPreset, write_logfile=writeLogfile)
+    clips.write_videofile(editedoutput, codec=vcodec, fps=30, bitrate=videoBitrate, audio_bitrate=audioBitrate, audio_codec=acodec, ffmpeg_params=fparams, threads=threadNum, preset=ffmpegPreset, write_logfile=writeLogfile)
 
 
 def parse_edl_edits(user_provided_file=user_provided_file, edl_file=edl_file, editedoutput=editedoutput): #user_provided_file, edl_file, editedoutput
@@ -694,9 +686,20 @@ def parse_edl_edits(user_provided_file=user_provided_file, edl_file=edl_file, ed
     parser.add_argument("-ac", "--acodec", help="Audio codec to use.")
     parser.add_argument("-fp", "--ffmpegparams", help="Additional FFMpeg parameters to use. Example: '-crf=24 -s=640x480'.")
     args = parser.parse_args()
-
+#    with open(edl_file, "r") as f:
+#        lines = f.readlines()
+    # Convert the .edl file into a list of FFmpeg commands    ffmpeg_commands = []
+#    for line in lines:
+#        if line.startswith("TITLE:"):
+#            continue
+#        if line.startswith("FCM:"):
+#            continue
+#        if line.startswith("* FROM CLIP NAME"):
+#            continue
+#        if not line.strip():
+#            continue
+#    estruct = EDL(lines)
     estruct = EDL(edl_file)
-
     videoBitrate = ""
     audioBitrate = ""
 
@@ -746,3 +749,17 @@ if __name__ == "__main__":
     generate_edl(output_srt_file)
     parse_edl_edits(user_provided_file, edl_file, editedoutput)
     print(editedoutput)
+    #apply_edits(user_provided_file, edl_file, editedoutput)
+    #command = ['ffmpeg', '-i', user_provided_file, '-f', 'edl', '-i', edl_file, '-codec', 'copy', editedoutput]
+    #subprocess.call(command)
+
+#Works in Progress
+#def determine_completeness(text):
+    #    response = openai.Completion.create(
+    #        engine="davinci",
+    #        prompt=f"{text}",
+    #        max_tokens=1024,
+    #        n=1,
+    #        stop=None,
+    #        temperature=0.5,
+    #    )
