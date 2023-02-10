@@ -1,3 +1,5 @@
+""" Note this version has broken everything, we're addinga feature to render output mp3 with timeline"""
+
 import openai
 openai.api_key = "YOUR-API-KEY"
 import srt
