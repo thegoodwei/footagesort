@@ -54,9 +54,9 @@ project_title = input("title project :: ")
 quotelength = int(input("apx duration for each block of text, in seconds?"))
 this_many_quotes = int(input("How many soundbites to show?       "))
 user_prompt = input("Keywords to prompt for relevancy ranking:     ")
-user_provided_file =  input("input filename .mp4 .m4a .mp3 .mov : ")
-if "srt" in user_provided_file:
-    input_subtitle_file = user_provided_file
+user_media_infile =  input("input filename .mp4 .m4a .mp3 .mov : ")
+if "srt" in user_media_infile:
+    input_subtitle_file = user_media_infile
     #bool to skip the transcription and rendering?
 default_input_audiofile = project_title + "_wavfile.wav"
 ts = time.time()
@@ -79,7 +79,7 @@ delay = 60.00 / 200         #60.00 / rate_limit_per_minute
 #output_srt_file = project_title + "_relevant_subs.srt"
 db_file = project_title + "TempDatabase_Subtitling.db"
 edl_file = project_title + "relevantfootage_timeline.edl"
-edited_video_out = project_title + "_"  + user_provided_file
+edited_media_outfile = project_title + "_"  + user_media_infile
 def db_setup(db_file):
     # Connect to the database
     conn = sqlite3.connect(db_file)
@@ -105,7 +105,7 @@ def write_to_file(newsubs, srt_file):#="temp.srt"):
     #print("creating audio file for summary...")
     ## input_audio = input_file[:-4] + ".wav"
     ## Convert the input file
-    #audio = AudioSegment.from_file(user_provided_file, format=user_provided_file.split(".")[-1])
+    #audio = AudioSegment.from_file(user_media_infile, format=user_media_infile.split(".")[-1])
     #audio.export(input_audio, format="wav")
     #
     ## initialize recognizer class
@@ -648,8 +648,8 @@ def search_database(srt_file, db_file, query, top_n=int(this_many_quotes)):
     print("SRT and EDL file ready for NLE import:")
     return(srt_file)
 
-def generate_edl(srt_file, edited_video_out):
-    fullvideo = user_provided_file #"fullvideo.mp4"
+def generate_edl(srt_file, edited_media_outfile):
+    fullvideo = user_media_infile #"fullvideo.mp4"
     #edl_filestruct = project_title + "_edlfilestruct.edl"
     #Read the SRT for a list of times to add to the EDL file
     with open(srt_file, 'r') as f:
@@ -690,14 +690,14 @@ def generate_edl(srt_file, edited_video_out):
         audioBitrate = "320k"
         print(edl_file)
 
-        if (".mp3" in user_provided_file) or (".m4a" in user_provided_file):
-            render(user_provided_file, estruct, (edited_video_out), None, audioBitrate, threadNum=threadNum, vcodec=None, acodec='aac', ffmpeg_params=None, ffmpegPreset=ffmpegPreset)
+        if (".mp3" in user_media_infile) or (".m4a" in user_media_infile):
+            render(user_media_infile, estruct, (edited_media_outfile), None, audioBitrate, threadNum=threadNum, vcodec=None, acodec='aac', ffmpeg_params=None, ffmpegPreset=ffmpegPreset)
         else:
-            render(user_provided_file, estruct, edited_video_out, videoBitrate, audioBitrate, threadNum=threadNum, vcodec='libx264', acodec='aac', ffmpeg_params=None, ffmpegPreset=ffmpegPreset)
+            render(user_media_infile, estruct, edited_media_outfile, videoBitrate, audioBitrate, threadNum=threadNum, vcodec='libx264', acodec='aac', ffmpeg_params=None, ffmpegPreset=ffmpegPreset)
 
         #.edl is compatible with premiere, but does not render in script with ffmpeg yet
-def edl_premiere(srt_file, user_provided_file):
-    fullvideo = user_provided_file  
+def edl_premiere(srt_file, user_media_infile):
+    fullvideo = user_media_infile  
     #edl_filestruct = project_title + "_edlfilestruct.edl"
     #Read the SRT for a list of times to add to the EDL file
     with open(srt_file, 'r') as f:
@@ -733,7 +733,7 @@ def edl_premiere(srt_file, user_provided_file):
         #nle_edl_file = "nle_" + str(edl_file)
         with open(edl_file, "w+") as f:
             f.write("TITLE: " + project_title + " \n" + "FCM: NON-DROP FRAME \n \n")
-            f.write(f"* FROM CLIP NAME: {user_provided_file}\n")
+            f.write(f"* FROM CLIP NAME: {user_media_infile}\n")
             cursor = 0 #?
            # seconds, not timecode
             for i, (start_timecode, end_timecode) in enumerate(subtimes):
@@ -802,7 +802,7 @@ def delayed_completion(delay_in_seconds: float = 1):
     #print(".....")
     time.sleep(delay_in_seconds)
 
-def apply_edits(input_mp3, edl_file, edited_video_out):
+def apply_edits(input_mp3, edl_file, edited_media_outfile):
     with open(edl_file, "w+") as f:
         lines = f.readlines()
 
@@ -839,7 +839,7 @@ def apply_edits(input_mp3, edl_file, edited_video_out):
         "-safe", "0",
         "-i", "filelist.txt",
         "-c", "copy",
-        edited_video_out
+        edited_media_outfile
     ]
 class Edit(object):
     """ This class is used to store the information of each edit. It has three attributes: time1, time2 and action.time1 and time2 are the start and end time of the edit. action is the action of the edit."""
@@ -886,12 +886,12 @@ class EDL(object):
         self.edits.append(Edit(time1, time2, action))
         self.sort()
 
-def render(user_provided_file, estruct, edited_video_out, videoBitrate="2000k", audioBitrate="400k", threadNum=4, ffmpegPreset="medium", vcodec=None, acodec=None, ffmpeg_params=None, writeLogfile=False):
+def render(user_media_infile, estruct, edited_media_outfile, videoBitrate="2000k", audioBitrate="400k", threadNum=4, ffmpegPreset="medium", vcodec=None, acodec=None, ffmpeg_params=None, writeLogfile=False):
     clipNum = 1
     global prevTime
     prevTime = 0
     actionTime = False
-    v = VideoFileClip(user_provided_file)
+    v = VideoFileClip(user_media_infile)
     duration = v.duration
     clips = v.subclip(0,0) #blank 0-time clip
     for edit in estruct.edits:
@@ -909,7 +909,7 @@ def render(user_provided_file, estruct, edited_video_out, videoBitrate="2000k", 
         nextTime = time2
         if action == "1":
             # Muting audio only. Create a segment with no audio and add it to the rest.
-            clip = VideoFileClip(user_provided_file, audio = False).subclip(prevTime,nextTime)
+            clip = VideoFileClip(user_media_infile, audio = False).subclip(prevTime,nextTime)
             clips = concatenate([clips, clip])
             print("created muted subclip from " + str(prevTime) + " to " + str(nextTime))
             # Advance to next segment time.
@@ -950,10 +950,15 @@ def render(user_provided_file, estruct, edited_video_out, videoBitrate="2000k", 
     clip = v.subclip(prevTime,videoLength)
     print("created ending clip from " + str(prevTime) + " to " + str(videoLength))
     clips = concatenate([clips,clip])
-    clips.write_videofile(edited_video_out, codec=vcodec, fps=30, bitrate=videoBitrate, audio_bitrate=audioBitrate, audio_codec=acodec, ffmpeg_params=fparams, threads=threadNum, preset=ffmpegPreset, write_logfile=writeLogfile)
+
+    if ("m4a" in user_media_infile):
+        clips.write_audiofile(edited_media_outfile, codec=aac, audio_bitrate=audioBitrate, audio_codec=acodec, ffmpeg_params=fparams, threads=threadNum, preset=ffmpegPreset, write_logfile=writeLogfile)
+
+    else:
+        clips.write_videofile(edited_media_outfile, codec=vcodec, fps=30, bitrate=videoBitrate, audio_bitrate=audioBitrate, audio_codec=acodec, ffmpeg_params=fparams, threads=threadNum, preset=ffmpegPreset, write_logfile=writeLogfile)
 
 
-"""def parse_edl_edits(user_provided_file=user_provided_file, edl_file=edl_file, edited_video_out=edited_video_out): #user_provided_file, edl_file, edited_video_out
+"""def parse_edl_edits(user_media_infile=user_media_infile, edl_file=edl_file, edited_media_outfile=edited_media_outfile): #user_media_infile, edl_file, edited_media_outfile
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--threads", type=int, help="Number of CPU threads to use.")
     parser.add_argument("-p", "--preset", choices=["ultrafast", "superfast", "fast", "medium", "slow", "superslow"], help="FFMPEG preset to use for optimizing the compression. Defaults to 'medium'.")
@@ -992,7 +997,7 @@ def render(user_provided_file, estruct, edited_video_out, videoBitrate="2000k", 
     else:
         ffmpegPreset = args.preset
 
- #   mi = MediaInfo.parse(user_provided_file)
+ #   mi = MediaInfo.parse(user_media_infile)
     if args.videobitrate == None:
  #       videoBitrate = str(int(mi.tracks[1].bit_rate / 1000)) + "k"
  #       print("Using original video bitrate: "+videoBitrate)
@@ -1012,28 +1017,28 @@ def render(user_provided_file, estruct, edited_video_out, videoBitrate="2000k", 
   #      if audioBitrate[-1] != 'k':
   #          audioBitrate = audioBitrate+'k'
 
-    render(user_provided_file, estruct, edited_video_out, videoBitrate, audioBitrate, threadNum=threadNum, vcodec=args.vcodec, acodec=args.acodec, ffmpeg_params=args.ffmpegparams, ffmpegPreset=ffmpegPreset)
+    render(user_media_infile, estruct, edited_media_outfile, videoBitrate, audioBitrate, threadNum=threadNum, vcodec=args.vcodec, acodec=args.acodec, ffmpeg_params=args.ffmpegparams, ffmpegPreset=ffmpegPreset)
 """
 
 if __name__ == "__main__":
-    srt_file = create_srt_transcript(user_provided_file, str(project_title + "_transcript.srt" ))
-    edited_video_out = project_title + user_provided_file
-    with open(edited_video_out, "w+") as f:
+    srt_file = create_srt_transcript(user_media_infile, str(project_title + "_transcript.srt" ))
+    edited_media_outfile = project_title + user_media_infile
+    with open(edited_media_outfile, "w+") as f:
         empty = f.read()
     db_setup(db_file)
     srt_file = combine_subs(srt_file)
     load_subtitles(srt_file, db_file)
     get_embeddings(srt_file, db_file)
     autokeywords = longsummary(srt_file)
-    apply_edits(user_provided_file, edl_file, edited_video_out)
+    apply_edits(user_media_infile, edl_file, edited_media_outfile)
     srt_file = search_database(srt_file, db_file, (user_prompt)     +"\n\n"+autokeywords)  #)
-    generate_edl(srt_file, edited_video_out)
-    edl_file = edl_premiere(srt_file, user_provided_file)
+    generate_edl(srt_file, edited_media_outfile)
+    edl_file = edl_premiere(srt_file, user_media_infile)
     print(srt_file) # note add function to adjust srt to match output edl 
     print(edl_file)
-    print(edited_video_out)
+    print(edited_media_outfile)
     
-    #command = ['ffmpeg', '-i', user_provided_file, '-f', 'edl', '-i', edl_file, '-codec', 'copy', edited_video_out]
+    #command = ['ffmpeg', '-i', user_media_infile, '-f', 'edl', '-i', edl_file, '-codec', 'copy', edited_media_outfile]
     #subprocess.call(command)
 
 
