@@ -12,7 +12,7 @@ Right now it works best with .mp4 files which have clear audio and a coherent sp
 
 Dependencies
 sudo apt update && sudo apt install ffmpeg vlc python3.8 git libavcodec-dev libavformat-dev libswscale-dev libx264-dev
-pip install --upgrade pip
+pip install --upgrade pip git python-dotenv 
 python3.8 -m pip install wheel speechrecognition setuptools-rust torchaudio tqdm soundfile more-itertools transformers ffmpeg-python pyannote.audio  openai wheel pyjson moviepy pyproject.toml pyproject srt edl pysqlite3 numpy pydub ffmpeg ffprobe timecode torch  openai openai[wandb]  openai[datalib] openai[embeddings]  openai-cli git+https://github.com/openai/whisper.git git+https://github.com/m-bain/whisperx.git git+https://github.com/Red5d/edlkit.git
 
 python3.8 -m venv footagesort
@@ -20,28 +20,18 @@ source footagesort/bin/activate
 
 Python footage_sort.py
 """
-
-import openai
-openai.api_key = "YOUR-API-KEY"
-import srt
-import sqlite3
-import speech_recognition as sr
-
-import json
-import random
-import time
-import numpy as np
 import sys, os, re, edl, tempfile, argparse
+from dotenv import load_dotenv
+load_dotenv()
+MY_OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+import openai
+openai.api_key = MY_OPENAI_API_KEY
+import speech_recognition as sr
+import whisperx, torch, time, requests, timecode, logging, subprocess, srt, sqlite3, json, random, time
+import numpy as np
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "MAX_SPLIT_ALLOC_SIZE=void"
-import torch
-import time
-import requests 
-import timecode
 from pathlib import Path 
-import whisperx
 from pydub import AudioSegment
-import logging
-import subprocess
 from moviepy.editor import *
 from pymediainfo import MediaInfo
 #import edlkit
