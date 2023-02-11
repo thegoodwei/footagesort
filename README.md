@@ -1,55 +1,58 @@
-# footagesort
-
+Footage_Sort - An AI-Powered Video Editing Tool
 UNSTABLE BUILD -- This project is in early beta, use at your own risk, or feel free to contribute.
 
-##Use openai to edit highlights of long videos and interviews
-###a Subtitle Soundbite Extractor
+Use AI to Edit Highlights of Long Videos
+AI Soundbite Extractor, with linked video
 
-This project takes an .srt video transcript file, concatenates subtitles to the desired search length, and uses OpenAI API to find the most relevant quotes to the user prompt. The application outputs an edited .srt of the user-prompted quantity of relevant soundbites and creates a video timeline .edl file with a placeholder fullvideo for the user to edit with in any NLE software.
+Footagesort is a project that uses artificial intelligence and natural language processing to extract relevant quotes from long videos and interviews. Given a an audio file, it transcribes in timecode for an .srt transcript file, combining subtitles to complete ideas and comparing OpenAI API long summaries with embeddings to find the most relevant quotes.
+The output is an edited .srt file with the desired quantity of relevant soundbites and a video timeline .edl file that can be edited in any NLE software.
 
-This program is used to extract relevant subtitles from a given transcript and store them in a database along with their corresponding embeddings. The user is prompted for various parameters such as the title of the project, transcript file, duration of each block of text, number of soundbites to be shown, and keywords for relevancy ranking.
 
-Getting Started
+The application transcribes audio into complete ideas and subtitles in .srt format.
+OpenAi provides a relevancy search by embeddings similiarity score, based on a user-defined prompt and autokeywords from script summarization.
+
+The user can set the target clip_length and the number of clips to return a media file, and the program will use the SRT and EDLkit to create an edited .EDL file with the edit decisions. This file can then be used in ffmpeg to render an AI-edited highlight video summary directly in video format. 
+
+
 Libraries Used
-    Python3.8
-    srt - To parse and manipulate the subtitles.
-    sqlite3 - To store the subtitles and their embeddings in a database.
-    openai - To generate embeddings for each subtitle, you will need an API key
-    
+Python3.8
+SRT - To parse and manipulate the subtitles.
+EDLkit - To create the edit decision list (EDL) for the edited video.
+Whisperx - To transcribe audio files into .srt subtitles.
+Numpy - For numerical computation and data manipulation.
+MoviePy - To render the output media with ffmpeg
+
 Installing
+Clone the repository to your local machine:
 
-    Clone the repository to your local machine.
+```bash
+git clone https://github.com/thegoodwei/footagesort.git
+```
 
-$bash git clone https://github.com/thegoodwei/footagesorting.git
+Install the required packages:
 
-    Install the required packages.
-
-pip install -r openai srt pysqlite3 numpy wheel pyjson
+```bash
+pip install -r requirements.txt
 
 Functionality
-
-    combine_subs - Combines multiple subtitles into a single block if they fall within a certain duration limit.
-    write_to_file - Writes the combined subtitles to a file in the .srt format.
-    db_setup - Sets up a database to store the subtitles and their embeddings.
-    load_subtitles - Loads the subtitles into the database.
-    get_embeddings - Generates embeddings for each subtitle and stores them in the database.
+transcribe_audio - Transcribes audio files into .srt subtitles using Whisper.
+extract_soundbites - Searches for relevant clips based on the user-defined prompt and extract the desired number of soundbites.
+generate_edl - Uses the extracted soundbites and EDLkit to create an edited .EDL file with the edit decisions.
+render_video - Uses FFmpeg to render the AI-edited highlight video summary.
 
 Usage
+Run the program and you will be prompted for the following:
+- Enter the file path for the audio file (support .mp3, .m4a, or .mp4).
+- Enter the desired length for each soundbite.
+- Enter the desired number of soundbites to extract.
+- Enter the keywords to prompt for relevancy ranking.
 
- Run the program and you will be prompted for the following:
-    Enter the title of the project.
-    Enter the name of the transcript file in the .srt format.
-    Enter the duration for each block of text (in seconds).
-    Enter the number of soundbites to be shown.
-    Enter the keywords to prompt for relevancy ranking.
+Currently command-line only.
 
-The script will then run and store the relevant subtitles along with their embeddings in the database.
+bash
+python main.py --input_file [INPUT_AUDIO/VIDEO_FILE] --clip_length [CLIP_LENGTH] --num_clips [NUMBER_OF_CLIPS] --prompt [PROMPT] 
 
-python main.py --input_file [INPUT_SRT_FILE] --prompt [PROMPT] --length [LENGTH] --output_file [OUTPUT_SRT_FILE]
+
 Contributing
 
-Feel free to submit pull requests or issues. Any contribution is appreciated.
-Author
-
-[theGoodWei]
-
+Feel free to submit pull requests or issues. Any contribution is appreciated
