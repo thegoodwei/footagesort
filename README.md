@@ -1,4 +1,7 @@
 # footagesort
+
+UNSTABLE BUILD -- This project is in early beta, use at your own risk, or feel free to contribute.
+
 ##Use openai to edit highlights of long videos and interviews
 ###a Subtitle Soundbite Extractor
 
@@ -50,4 +53,3 @@ Author
 
 [theGoodWei]
 
-Open Source
