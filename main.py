@@ -22,7 +22,7 @@ Python footage_sort.py
 """
 
 import openai
-openai.api_key = "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"
+openai.api_key = "YOUR-API-KEY"
 import srt
 import sqlite3
 import speech_recognition as sr
