@@ -3,9 +3,10 @@ NOTE: Unstable Python project in early beta. code contains bugs. USE AT YOUR OWN
 
 You will need your own OpenAI API key.
 
-This program transcribes video with Python, generates SRT files to edit, 
-and translates the SRTs into an EDL timeline to render with ffmpeg. 
-The video timeline can be edited and adjusted in any NLE.
+This program transcribes video subs into SRT files with timecode.
+The OpenAI is used to summarize and compare embeddings with user prompts for each subtitle to rate the relevancy of each soundbyte
+The script edits the SRT, translates the timeline into an EDL which can be edited and adjusted in any NLE.
+MoviePy is used to render the edited media file with ffmpeg.
 
 Right now it works best with .mp4 files which have clear audio and a coherent speaker.
  Not the best with voices talking over one another.
@@ -89,7 +90,7 @@ def write_to_file(newsubs, srt_file):#="temp.srt"):
     print("written to file")
     return srt_file
 
-#def longsummary(input_audio):
+#def Alternate-Transcription(input_audio):
     #input_audio = default_input_audiofile
     ##there used to be an 'with open' to create the file but I deleted it because errors 40 lines following btu it didnt fix
     #print("creating audio file for summary...")
@@ -106,7 +107,6 @@ def write_to_file(newsubs, srt_file):#="temp.srt"):
     #print(input_audio)
     #with sr.AudioFile(input_audio) as source:
     #    audio_text = r.listen(source)
-#
     ## recoginize_() method will throw a request error if the API is unreachable, hence using exception handling
     #try:
     #    # using google speech recognition
@@ -117,6 +117,8 @@ def write_to_file(newsubs, srt_file):#="temp.srt"):
     # #YouTubeTranscriptApi.get_transcript(video_id)
     #print(py_transcribed)
     # Open the subtitle file
+    
+   
 def longsummary(srt_file):
     print("Long summary has begun! \n \n Try this \n \n")
     f = open(srt_file,"r")
