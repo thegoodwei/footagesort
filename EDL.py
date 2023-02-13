@@ -1,4 +1,11 @@
-class EDL:
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+
+ Class EDL(Base):
     def __init__(self, project_name = "", video_files = [], audio_files = [], timecode = "00:00:00:00", edits = [], play_times = [], clip_names = [], fps = 29.97, codec = "uncompressed", resolution = "HD", aspect_ratio = "16:9", total_clips = 0, total_runtime = 0, subtitles_srt = "", metadata = ""):
         self.project_name = project_name
         self.video_files = video_files
@@ -13,9 +20,6 @@ class EDL:
         self.aspect_ratio = aspect_ratio
         self.total_clips = total_clips
         self.total_runtime = total_runtime
-        self.subtitles_srt = subtitles_srt
-        self.metadata = metadata
-
         self.edlfile = edlfile
 
         if (os.path.exists(self.edlfile) == False):
@@ -24,8 +28,20 @@ class EDL:
             with open(self.edlfile) as f:
                 for line in f.readlines():
                     if len(line.split()) == 3:
-
-
+        video_files = relationship("VideoFile", back_populates="edl")
+        audio_files = relationship("AudioFile", back_populates="edl")
+        __tablename__ = 'edl'
+        id = Column(Integer, primary_key=True)
+        project_name = Column(String)
+        timecode = Column(String)
+        fps = Column(String)
+        codec = Column(String)
+        resolution = Column(String)
+        aspect_ratio = Column(String)
+        total_clips = Column(Integer)
+        total_runtime = Column(Integer)
+        subtitles_srt = Column(String)
+        metadata = Column(String)
 
 
     def parse_timecode(self, timecode_str):
@@ -68,6 +84,10 @@ class EDL:
         return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
 def parse_srt(srt_file):
+        __tablename__ = 'video_files'
+    id = Column(Integer, primary_key=True)
+    video_file = Column(String)
+    edl_id = Column(Integer, ForeignKey('edl.id'))
     if not isinstance(srt_file, str):
         raise TypeError("Invalid input type for srt_file, expected string, got {}".format(type(srt_file)))
     srt_lines = srt_file.split('\n')
@@ -88,3 +108,16 @@ def parse_srt(srt_file):
         timecodes.append((start, end))
         current_line += 3
     return timecodes
+
+class VideoFile(Base):
+    __tablename__ = 'video_files'
+    id = Column(Integer, primary_key=True)
+    video_file = Column(String)
+    edl_id = Column(Integer, ForeignKey('edl.id'))
+
+class AudioFile(Base):
+    __tablename__ = 'audio_files'
+    id = Column(Integer, primary_key=True)
+    audio_file = Column(String)
+    edl_id = Column(Integer, ForeignKey('edl.id'))
+Base.metadata.create_all(engine)
