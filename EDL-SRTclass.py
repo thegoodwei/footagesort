@@ -16,6 +16,18 @@ class EDL:
         self.subtitles_srt = subtitles_srt
         self.metadata = metadata
 
+        self.edlfile = edlfile
+
+        if (os.path.exists(self.edlfile) == False):
+            open(self.edlfile, 'a').close()
+        else:
+            with open(self.edlfile) as f:
+                for line in f.readlines():
+                    if len(line.split()) == 3:
+
+
+
+
     def parse_timecode(self, timecode_str):
         timecode_parts = timecode_str.split(":")
         frames = int(timecode_parts[3]) * self.fps
@@ -47,27 +59,13 @@ class EDL:
             edl_string += "00:00:00:00 " + start_timecode + " " + filename + " " + start_timecode + " " + end_timecode + " " + filename + "\n"
         return edl_string
 
-def frames_to_timecode(self, frames):
+     def frames_to_timecode(self, frames):
         total_seconds = frames / self.fps
         hours = int(total_seconds / 3600)
         minutes = int((total_seconds - hours * 3600) / 60)
         seconds = int(total_seconds - hours * 3600 - minutes * 60)
         milliseconds = int((total_seconds - int(total_seconds)) * 1000)
         return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
-def parse_srt(srt_file):
-    srt_lines = srt_file.split('\n')
-    timecodes = []
-    current_line = 1
-    while current_line < len(srt_lines):
-        if srt_lines[current_line].strip() == '':
-            current_line += 1
-            continue
-        start, end = srt_lines[current_line].split(' --> ')
-        start = start.strip()
-        end = end.strip()
-        timecodes.append((start, end))
-        current_line += 3
-    return timecodes
 
 def parse_srt(srt_file):
     if not isinstance(srt_file, str):
