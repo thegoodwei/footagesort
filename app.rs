@@ -103,7 +103,7 @@ impl Component for App {
         }
     }
 
-    fn view(&self) -> Html {
+    fn fn view(&self) -> Html {
         let loading_text = if self.loading {
             html! { <span>{"Loading..."}</span> }
         } else {
@@ -111,4 +111,25 @@ impl Component for App {
         };
         html! {
             <>
-               
+                <div>
+                    <h1>{"FootageSorter"}</h1>
+                    <p>{"test file: --QuoteLength (3-90) --finalLengthSeconds(3-1800), --keywords prompt or note thr content, and upload a .mp4 file to sort your footage."}</p>
+                    <div>
+                        <label>{"Input:"}</label>
+                        <textarea
+                            value=&self.input
+                            oninput=self.link.callback(|e: InputData| Msg::UpdateInput(e.value))
+                        />
+                        <button onclick=self.link.callback(|_| Msg::Submit)>{ "Submit" }</button>
+                        <button onclick=self.link.callback(|_| Msg::UploadFile)>{ "Upload file" }</button>
+                    </div>
+                    <div>
+                        <label>{"Output:"}</label>
+                        <textarea readonly=true value=&self.output />
+                        { loading_text }
+                    </div>
+                </div>
+            </>
+        }
+    }
+}
